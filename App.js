@@ -8,7 +8,7 @@ import {
   FlatList,
   TouchableWithoutFeedback,
 } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
 import uuid from 'react-native-uuid';
@@ -36,7 +36,7 @@ const Item = ({name, date}) => (
   </View>
 );
 
-function HomeScreen({navigation}) {
+function HomeScreen({route, navigation}) {
 
   const renderItem = ({item}) => (
     <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -53,7 +53,19 @@ function HomeScreen({navigation}) {
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
 
-  useEffect(() => {}, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (route.params && route.params.friend) {
+        setFriends(friends => friends.map((row, index) => {
+          console.log(row);
+          if (row.id === route.params.friend.id) {
+            return route.params.friend;
+          }
+          return row;
+        }));
+      }
+    }, [route.params])
+  );
 
   const onAddFriend = () => {
     const friend = {
@@ -103,6 +115,7 @@ function DetailsScreen({route, navigation}) {
 
   const [name, setName] = useState(friend.name);
   const [date, setDate] = useState(friend.date);
+  const [id, setId] = useState(friend.id);
 
   return (
     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
@@ -121,7 +134,7 @@ function DetailsScreen({route, navigation}) {
 
       <Button
         title="Gå tilbake"
-        onPress={() => navigation.navigate('Home', { friend: { name: name, date: date } })}
+        onPress={() => navigation.navigate('Home', { friend: { name: name, date: date, id: id } })}
       />
     </View>
   );
