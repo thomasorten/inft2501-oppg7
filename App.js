@@ -1,17 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  Button,
-  TextInput,
-  FlatList,
-  TouchableWithoutFeedback,
-} from 'react-native';
-import {NavigationContainer, useFocusEffect} from '@react-navigation/native';
+import {StyleSheet, Text, View, Button, TextInput} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
-import uuid from 'react-native-uuid';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,7 +12,6 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Details" component={DetailsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />
@@ -29,113 +19,81 @@ export default function App() {
   );
 }
 
-const Item = ({name, date}) => (
-  <View style={styles.item}>
-    <Text style={styles.name}>{name}</Text>
-    <Text style={styles.date}>{date}</Text>
-  </View>
-);
+function HomeScreen({navigation}) {
 
-function HomeScreen({route, navigation}) {
-
-  const renderItem = ({item}) => (
-    <View style={{flexDirection: 'row', alignItems: 'center'}}>
-      <Item name={item.name} date={item.date} />
-      <Button title="Rediger" onPress={(e) => { 
-          e.persist();
-          navigation.navigate('Details', { friend: item })
-        }
-      } />
-    </View>
-  );
-
-  const [friends, setFriends] = useState([]);
   const [name, setName] = useState('');
-  const [date, setDate] = useState('');
+  const [card, setCard] = useState('');
+  const [isLoading, setLoading] = useState(true);
+  const [response, setResponse] = useState('');
+  const [clicks, setClicks] = useState(0);
+  const [started, setStarted] = useState(false);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      if (route.params && route.params.friend) {
-        setFriends(friends => friends.map((row, index) => {
-          console.log(row);
-          if (row.id === route.params.friend.id) {
-            return route.params.friend;
-          }
-          return row;
-        }));
-      }
-    }, [route.params])
-  );
+  const sendRequest = async (url, callback) => {
+    try {
+     const response = await fetch(url);
+     const res = await response.text();
+     setLoading(false);
+     setResponse(res);
+     callback(res);
+   } catch (error) {
+     console.error(error);
+   }
+ };
 
-  const onAddFriend = () => {
-    const friend = {
-      id: uuid.v4(),
-      name: name,
-      date: date,
-    }
-    setFriends(friends => [...friends, friend]);
+  const startGame = async (url) => {
+    sendRequest(`https://bigdata.idi.ntnu.no/mobil/tallspill.jsp?navn=${name}&kortnummer=${card}`, (res) => {   
+      setStarted(true);
+    });
   };
 
-  return (
-    <View
-      style={{
-        alignItems: 'center',
-        flex: 1,
-        justifyContent: 'space-around'
-      }}>
+  const choose = (number) => {
+    sendRequest(`https://bigdata.idi.ntnu.no/mobil/tallspill.jsp?tall=${number}`, (res) => {   
+      setClicks((clicks) => clicks+1);
+    });
+  }
 
-      <FlatList
-        data={friends}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-      />
+  useEffect(() => {
 
-      <View style={{alignItems: 'center', marginBottom: 50}}>
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <Text>Navn:</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
-
-          <Text>Fødselsdato:</Text>
-          <TextInput style={styles.input} value={date} onChangeText={setDate} />
-        </View>
-
-        <View style={styles.fixToText}>
-          <Button title="Legg til" onPress={() => onAddFriend()} />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function DetailsScreen({route, navigation}) {
-
-  const { friend } = route.params;
-
-  console.log('Friend: ', friend);
-
-  const [name, setName] = useState(friend.name);
-  const [date, setDate] = useState(friend.date);
-  const [id, setId] = useState(friend.id);
+  }, []);
 
   return (
     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <Text>Rediger</Text>
 
-      <View style={{alignItems: 'center', marginBottom: 50}}>
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <Text>Navn:</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
+      <Text style={{marginBottom: 20}}>Vennligst oppgi navn og kortnummer for å spille!</Text>
 
-          <Text>Fødselsdato:</Text>
-          <TextInput style={styles.input} value={date} onChangeText={setDate} />
-        </View>
+      <Text style={{marginBottom: 30, fontSize: 24}}>{response}</Text>
 
+      { started &&
+      <View style={{alignItems: 'flex-start', justifyContent: 'space-evenly', flexDirection: 'row', marginBottom: 30}}>
+        {[...Array(10).keys()].map((prop, key) => {
+          return (
+            <Button key={key} title={`${key+1}`} onPress={() => choose(key+1)} />
+          );
+        })}
+      </View>
+      }
+
+      <Text>Navn:</Text>
+      <TextInput
+        style={styles.input}
+        value={`${name}`}
+        onChangeText={setName}
+      />
+
+      <Text>Kortnummer:</Text>
+      <TextInput
+        style={styles.input}
+        value={`${card}`}
+        onChangeText={setCard}
+      />
+
+      <View style={styles.fixToText}>
+        <Button
+          title="Spill!"
+          onPress={() => startGame()}
+        />
       </View>
 
-      <Button
-        title="Gå tilbake"
-        onPress={() => navigation.navigate('Home', { friend: { name: name, date: date, id: id } })}
-      />
     </View>
   );
 }
@@ -145,8 +103,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginTop: 0,
+    justifyContent: 'center',
   },
   input: {
     width: 100,
@@ -158,17 +115,5 @@ const styles = StyleSheet.create({
   fixToText: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  item: {
-    backgroundColor: '#fff',
-    padding: 10,
-    marginVertical: 8,
-    marginHorizontal: 8,
-  },
-  name: {
-    fontSize: 16,
-  },
-  date: {
-    fontSize: 16,
   },
 });
