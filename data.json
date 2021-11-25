@@ -1,0 +1,47 @@
+[
+    {
+
+        "title": "Dune",
+        "director": "Denis Villeneuve",
+        "actors": [
+            "Timothée Chalamet",
+            "Rebecca Ferguson"
+        ]
+    },
+    {
+
+        "title": "Ghostbusters: Afterlife",
+        "director": "Jason Reitman",
+        "actors": [
+            "Carrie Coon",
+            "Paul Rudd"
+        ]
+    },
+    {
+
+        "title": "Eternals",
+        "director": "Chloé Zhao",
+        "actors": [
+            "Gemma Chan",
+            "Angelina Jolie"
+        ]
+    },
+    {
+
+        "title": "Clifford the Big Red Dog",
+        "director": "Walt Becker",
+        "actors": [
+            "Darby Camp",
+            "Jack Whitehall"
+        ]
+    },
+    {
+
+        "title": "King Richard",
+        "director": "Reinaldo Marcus Green",
+        "actors": [
+            "Will Smith",
+            "Aunjanue Ellis"
+        ]
+    }
+]
